@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rayflix Fake News Generator</title>
+    <style>
+        body {
+            font-family: 'Merriweather', serif;
+            margin: 20px;
+            background-color: #f8f8f8;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2#output-headline {
+            text-align: center;
+            color: #e44d26; /* Rayflix color scheme */
+            font-family: 'Playfair Display', serif;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: calc(100% - 16px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #e44d26; /* Rayflix color scheme */
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #c63d17;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+            color: #777;
+        }
+        #news-output {
+            margin-top: 30px;
+            padding: 25px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            background-color: #fefefe;
+            white-space: pre-wrap;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        #news-output h2#output-headline {
+            text-align: left;
+            margin-top: 0;
+            color: #e44d26; /* Rayflix color scheme */
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        #news-output p:first-of-type { /* Byline */
+            font-style: italic;
+            color: #777;
+            margin-bottom: 15px;
+        }
+        #error-message {
+            color: #e74c3c;
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+            font-weight: bold;
+        }
+        .button-group {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .source-info {
+            font-size: small;
+            color: #999;
+            margin-top: 15px;
+            text-align: right;
+        }
+        #disclaimer {
+            margin-top: 30px;
+            font-size: small;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        #copyright {
+            margin-top: 30px;
+            font-size: small;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>Rayflix Fake News Generator</h1>
+        <div class="form-group">
+            <label for="tone">Select Tone:</label>
+            <select id="tone" name="tone">
+                <option value="neutral" selected>Neutral</option>
+                <option value="humorous">Humorous</option>
+                <option value="serious">Serious</option>
+                <option value="outrageous">Outrageous</option>
+                <option value="satirical">Satirical</option>
+                <option value="conspiratorial">Conspiratorial</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="topic">Select Topic:</label>
+            <select id="topic" name="topic">
+                <option value="">-- Any --</option>
+                <option value="politics">Politics</option>
+                <option value="science">Science</option>
+                <option value="local events in Kolkata">Local Events in Kolkata</option>
+                <option value="celebrities">Celebrities</option>
+                <option value="technology">Technology</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="author">Author:</label>
+            <input type="text" id="author" name="author" placeholder="Fictional Author">
+        </div>
+        <div class="form-group">
+            <label for="date">Date:</label>
+            <input type="text" id="date" name="date" placeholder="e.g., April 29, 2025">
+        </div>
+        <div class="form-group">
+            <label for="source">Source:</label>
+            <input type="text" id="source" name="source" placeholder="e.g., Global News Today">
+        </div>
+        <div class="form-group">
+            <label for="keywords">Keywords/Entities:</label>
+            <input type="text" id="keywords" name="keywords" placeholder="e.g., Kolkata metro, flying fish">
+        </div>
+        <div class="form-group">
+            <label for="length">Length:</label>
+            <select id="length" name="length">
+                <option value="short">Short</option>
+                <option value="medium" selected>Medium</option>
+                <option value="long">Long</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="prompt">Specific Prompt (Optional):</label>
+            <textarea id="prompt" name="prompt" rows="4" placeholder="e.g., 'Write about a surprising discovery in the Hooghly River...'"></textarea>
+        </div>
+        <button onclick="generateAiNews()">Generate Fake News</button>
+        <div id="loading">Generating... please wait.</div>
+        <div id="news-output" style="display: none;">
+            <h2 id="output-headline"></h2>
+            <p>By <span id="output-author"></span> - <span id="output-date"></span></p>
+            <p id="ai-output"></p>
+            <div class="source-info">Source: <span id="output-source"></span></div>
+            <div class="button-group">
+                <button onclick="regenerateNews()">Regenerate</button>
+                <button onclick="copyToClipboard()">Copy to Clipboard</button>
+            </div>
+        </div>
+        <div id="error-message"></div>
+        <p id="disclaimer">**Disclaimer:** This is AI-generated fake news for entertainment purposes only. Please be aware of the potential for misinformation and use responsibly.</p>
+        <div id="copyright">
+            ©️ 2025 Kaustav Ray. All rights reserved.
+        </div>
+    </div>
+
+    <script>
+        const apiKey = "AIzaSyD3fNCe8FZghIk4Xh6BAs6A3ds1_7jxY1w";
+        const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        let lastPrompt = "";
+
+        async function generateAiNews() {
+            const tone = document.getElementById('tone').value;
+            const topic = document.getElementById('topic').value;
+            const author = document.getElementById('author').value;
+            const date = document.getElementById('date').value;
+            const source = document.getElementById('source').value;
+            const keywords = document.getElementById('keywords').value;
+            const length = document.getElementById('length').value;
+            const specificPrompt = document.getElementById('prompt').value;
+
+            let finalPrompt = "";
+            if (specificPrompt.trim()) {
+                finalPrompt = `Write a fake news story with a ${tone} tone about ${specificPrompt}`;
+                if (keywords.trim()) {
+                    finalPrompt += ` including the following keywords: ${keywords}.`;
+                }
+                finalPrompt += ` Make it sound like a real news report.`;
+            } else {
+                finalPrompt = `Write a fake news story with a ${tone} tone`;
+                if (topic) {
+                    finalPrompt += ` about ${topic}`;
+                }
+                if (keywords.trim()) {
+                    finalPrompt += ` including the following keywords: ${keywords}.`;
+                } else {
+                    finalPrompt += ".";
+                }
+                finalPrompt += ` Make it sound like a real news report.`;
+            }
+
+            let maxOutputTokens = 300;
+            if (length === 'short') maxOutputTokens = 150;
+            else if (length === 'long') maxOutputTokens = 500;
+
+            lastPrompt = finalPrompt;
+
+            document.getElementById('news-output').style.display = 'none';
+            document.getElementById('error-message').textContent = '';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('output-headline').style.display = 'none';
+            document.getElementById('output-author').textContent = '';
+            document.getElementById('output-date').textContent = '';
+            document.getElementById('output-source').textContent = '';
+            document.getElementById('ai-output').textContent = '';
+
+            try {
+                const response = await fetch(baseUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: finalPrompt }]
+                        }],
+                        generationConfig: {
+                            maxOutputTokens: maxOutputTokens,
+                            temperature: 0.5,
+                            topP: 0.7,
+                            topK: 30,
+                        },
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Gemini API Error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('news-output').style.display = 'block';
+                document.getElementById('ai-output').textContent = data.candidates[0].content.parts[0].text;
+                document.getElementById('output-author').textContent = author || "Staff Writer";
+                document.getElementById('output-date').textContent = date || new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.getElementById('output-source').textContent = source || "AI Generated Content";
+
+                // Generate a headline
+                const headlinePrompt = `Generate a realistic and attention-grabbing headline for the following news article: "${data.candidates[0].content.parts[0].text}"`;
+                const headlineResponse = await fetch(baseUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: headlinePrompt }]
+                        }],
+                        generationConfig: {
+                            maxOutputTokens: 100,
+                            temperature: 0.4,
+                            topP: 0.7,
+                            topK: 30,
+                        },
+                    }),
+                });
+
+                if (headlineResponse.ok) {
+                    const headlineData = await headlineResponse.json();
+                    const headline = headlineData.candidates[0].content.parts[0].text.trim();
+                    document.getElementById('output-headline').textContent = headline;
+                    document.getElementById('output-headline').style.display = 'block';
+                } else {
+                    console.warn("Failed to generate realistic headline.");
+                }
+
+            } catch (error) {
+                console.error("Error fetching AI response from Gemini:", error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-message').textContent = error.message;
+            }
+        }
+
+        async function regenerateNews() {
+            generateAiNews();
+        }
+
+        function copyToClipboard() {
+            const headline = document.getElementById('output-headline').textContent;
+            const byline = `By ${document.getElementById('output-author').textContent} - ${document.getElementById('output-date').textContent}`;
+            const sourceInfo = `Source: ${document.getElementById('output-source').textContent}`;
+            const articleBody = document.getElementById('ai-output').textContent;
+            const textToCopy = `${headline}\n\n${byline}\n\n${articleBody}\n\n${sourceInfo}\n\n**Disclaimer:** This is AI-generated fake news for entertainment purposes only.`;
+            navigator.clipboard.writeText(textToCopy).then(function() {
+                alert("Fake news copied to clipboard!");
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+                alert("Failed to copy text.");
+            });
+        }
+    </script>
+</body>
+</html>
